@@ -12,7 +12,7 @@ Metadata:
     ReadmeUrl: README.md
     Labels: ['cloudformation', 'github', 'sam', 'automation']
     HomePageUrl: https://github.com/mhlabs/cfn-diagram-github#readme
-    SemanticVersion: 0.0.1
+    SemanticVersion: 0.0.4
     SourceCodeUrl: https://github.com/mhlabs/cfn-diagram-github
 Globals:
   Function:

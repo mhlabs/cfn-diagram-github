@@ -4,6 +4,9 @@ Sample project that creates a badge-like URL for displaying an auto generated an
 
 This uses [cfn-diagram](https://github.com/mhlabs/cfn-diagram) along with [pageres](https://github.com/sindresorhus/pageres) to generate a screenshot using headless chrome.
 
+Example output:
+![Example](https://upnbcjt4n5.execute-api.eu-west-1.amazonaws.com/diagram?repo=cfn-diagram-github&branch=master)
+
 ## Setup
 
 1. Install this [SAM application](https://eu-west-1.console.aws.amazon.com/lambda/home?region=eu-west-1#/create/app?applicationId=arn:aws:serverlessrepo:eu-west-1:751354400372:applications/cfn-diagram-github) from the Serverless Application Repository
