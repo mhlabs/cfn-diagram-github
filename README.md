@@ -24,7 +24,7 @@ Note that the first time you request a diagram for a repo it will take a couple 
 NOTE that the URL is, although hard to guess, public by default. You can extend this with a WAF protection if needed.
 
 ## Architecture
-![Diagram](images/diagram.png)
+![Diagram](https://raw.githubusercontent.com/mhlabs/cfn-diagram-github/master/images/diagram.png)
 
 ## Known issues / assumptions
 * The code will look for template files from the following list of file names: `['template.yaml', 'template.yml', 'template.json', 'sam.yaml', 'sam.yml', 'sam.json', 'serverless.template']`. 
