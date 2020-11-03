@@ -6,7 +6,7 @@ This uses [cfn-diagram](https://github.com/mhlabs/cfn-diagram) along with [pager
 
 ## Setup
 
-1. Install this [SAM application](url here) from the Serverless Application Repository
+1. Install this [SAM application](https://eu-west-1.console.aws.amazon.com/lambda/home?region=eu-west-1#/create/app?applicationId=arn:aws:serverlessrepo:eu-west-1:751354400372:applications/cfn-diagram-github) from the Serverless Application Repository
 2. When prompted, enter your [GitHub token](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token), your GitHub organistaion/user and the secret key (could be any string). Take note of the secret for step 4
 3. After installed, take note of the `DiagramUrl` and `WebhookUrl` values in the outputs section. I.e 'https://a1b2c3d4e5.execute-api.eu-west-1.amazonaws.com/diagram'
 4. Go to your GitHub account and [set up a webhook](https://developer.github.com/webhooks/creating/) on all push events. The endpoint URL should be the value of `WebhookUrl` in step 3. Set the secret to be the same as in step 2. This is to prevent unauthorised access to your endpoint.
