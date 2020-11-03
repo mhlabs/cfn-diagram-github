@@ -1,0 +1,169 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform:
+  - 'AWS::Serverless-2016-10-31'
+Description: Sample project that creates a badge-like URL for displaying an auto generated and always up-to-date diagram of your CloudFormation/SAM template in your blog or README-file.
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: cfn-diagram-github
+    Description: Sample project that creates a badge-like URL for displaying an auto generated and always up-to-date diagram of your CloudFormation/SAM template in your blog or README-file.
+    Author: mhlabs
+    SpdxLicenseId: MIT
+    LicenseUrl: LICENSE.txt
+    ReadmeUrl: README.md
+    Labels: ['cloudformation', 'github', 'sam', 'automation']
+    HomePageUrl: https://github.com/mhlabs/cfn-diagram-github#readme
+    SemanticVersion: 0.0.1
+    SourceCodeUrl: https://github.com/mhlabs/cfn-diagram-github
+Globals:
+  Function:
+    Runtime: nodejs12.x
+Parameters:
+  GithubToken:
+    Type: String
+    NoEcho: true
+  GithubSecret:
+    Type: String
+    NoEcho: true
+  GithubOwner:
+    Type: String
+Resources:
+  ImageApiHandler:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref DiagramBucket
+        - Version: 2012-10-17
+          Statement:
+            - Sid: Statement1
+              Effect: Allow
+              Action:
+                - 'codebuild:StartBuild'
+              Resource:
+                - !GetAtt CodeBuild.Arn
+      CodeUri: .
+      Handler: src/ImageApiHandler.handler
+      MemorySize: 768
+      Timeout: 30
+      Environment:
+        Variables:
+          DiagramBucket: !Ref DiagramBucket
+          CodeBuildProject: !Ref CodeBuild
+          GithubToken: !Ref GithubToken
+          GithubOwner: !Ref GithubOwner
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            Method: GET
+            Path: /diagram
+  WebhookHandler:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Policies:
+        - Version: 2012-10-17
+          Statement:
+            - Sid: Statement1
+              Effect: Allow
+              Action:
+                - 'codebuild:StartBuild'
+              Resource:
+                - !GetAtt CodeBuild.Arn
+      CodeUri: .
+      Handler: src/WebhookHandler.handler
+      MemorySize: 768
+      Timeout: 30
+      Environment:
+        Variables:
+          GithubToken: !Ref GithubToken
+          CodeBuildProject: !Ref CodeBuild
+          DiagramBucket: !Ref DiagramBucket
+          GithubOwner: !Ref GithubOwner
+          GithubSecret: !Ref GithubSecret
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            Method: POST
+            Path: /webhook
+  CodeBuild:
+    Type: 'AWS::CodeBuild::Project'
+    Properties:
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts:
+        Type: no_artifacts
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: 'aws/codebuild/standard:3.0'
+        EnvironmentVariables:
+          - Name: GithubToken
+            Type: PLAINTEXT
+            Value: !Ref GithubToken
+      Source:
+        Type: NO_SOURCE
+        BuildSpec: |
+          version: 0.2
+          phases:
+            install:
+              runtime-versions:
+                nodejs: 12
+              commands:
+                - npm install @mhlabs/cfn-diagram-ci
+                - "sed -i 's/launchOptions: {}/launchOptions: {args: [\"--no-sandbox\", \"--disable-setuid-sandbox\"]}/g' node_modules/capture-website/index.js"
+            build:
+              commands:
+                - node ./node_modules/@mhlabs/cfn-diagram-ci/index.js html -t ${TEMPLATE_FILE}
+                - ls -lart
+                - "aws s3 cp ./cfn-diagram.png s3://${BUCKET_NAME}/${STACK_NAME}/${BRANCH_NAME}/cfn-diagram.png"
+      TimeoutInMinutes: 5
+  CodeBuildRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action: 'sts:AssumeRole'
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - apigateway.amazonaws.com
+                - events.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Path: /
+  CodeBuildRolePolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyName: CodeBuildRolePolicy
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Resource:
+              - '*'
+            Action:
+              - 'logs:CreateLogGroup'
+              - 'logs:CreateLogStream'
+              - 'logs:PutLogEvents'
+          - Effect: Allow
+            Resource:
+              - !Sub '${DiagramBucket.Arn}/*'
+              - !Sub '${DiagramBucket.Arn}'
+            Action:
+              - 's3:Put*'
+      Roles:
+        - !Ref CodeBuildRole
+  DiagramBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub '${AWS::StackName}-bucket'
+Outputs: 
+  DiagramUrl:
+    Value: !Sub https://${ServerlessHttpApi}.execute-api.eu-west-1.amazonaws.com/diagram
+  WebhookUrl:
+    Value: !Sub https://${ServerlessHttpApi}.execute-api.eu-west-1.amazonaws.com/webhook

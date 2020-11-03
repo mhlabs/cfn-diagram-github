@@ -1,0 +1,25 @@
+{
+  "name": "cfn-diagram-github",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "jest": {
+    "collectCoverage": false,
+    "collectCoverageFrom": [
+      "src/**/*.js"
+    ]
+  },
+  "dependencies": {
+    "@mhlabs/cfn-diagram": "^1.1.5",
+    "@mhlabs/structured-logging": "^2.0.2",
+    "@octokit/rest": "^18.0.6",
+    "@octokit/webhooks": "^7.15.1",
+    "yaml-cfn": "^0.2.3"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.777.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
